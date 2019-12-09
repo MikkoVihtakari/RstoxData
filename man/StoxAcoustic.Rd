@@ -7,11 +7,7 @@
 StoxAcoustic(AcousticData = NULL)
 }
 \arguments{
-<<<<<<< HEAD
 \item{AcousticData}{A list of acoustic data (StoX data type \code{\link{AcousticData}}), one element for each input acoustic file.}
-=======
-\item{AcousticData}{The output from xmlreader.}
->>>>>>> ef61effe44e8eed48af94c00c38af3e3216de6c6
 }
 \value{
 An object of StoX data type \code{\link{StoxAcousticData}}.
