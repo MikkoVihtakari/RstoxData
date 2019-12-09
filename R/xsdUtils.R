@@ -219,3 +219,56 @@ createXsdObject <- function(xsdFile) {
 
 	return(ret)
 }
+
+
+#' @importFrom xml2 xml_child read_html xml_find_all
+autodetectXml <- function(xmlFile, xsdObjects) {
+
+	# Read first 500 characters
+	tmpText <- readChar(xmlFile, 500)
+	bits <- read_html(tmpText)
+
+	# Getting encoding
+	tmpG1 <- regexpr('encoding="\\K[^"]*', tmpText, perl=T)
+	if(tmpG1 > -1) {
+		tmpG2 <- tmpG1 + attr(tmpG1, "match.length") - 1
+		xmlEnc <- substr(tmpText, tmpG1, tmpG2)
+	} else {
+		xmlEnc <- NULL
+	}
+
+	# Getting XSD information
+	# Peek xmlns
+	print("Try to use XML namespace")
+
+	tmpG1 <- regexpr('xmlns="\\K[^"]*', tmpText, perl=T)
+	if(tmpG1 > -1) {
+		tmpG2 <- tmpG1 + attr(tmpG1, "match.length") - 1
+		xmlXsd <- substr(tmpText, tmpG1, tmpG2)
+		xmlXsd <- paste0(tail(unlist(strsplit(xmlXsd, "/")), 2), collapse = "")
+        } else {
+		xmlXsd <- NULL
+	}
+
+	if(paste0(xmlXsd, ".xsd") %in% names(xsdObjects))
+		return(list(xsd = xmlXsd, encoding = xmlEnc))
+
+	print("Do manual detection")
+	# Do manual detection
+	if( length(xml_find_all(bits, "//mission[@startyear]")) )
+		xmlXsd <- "nmdbioticv3"
+	else if( length(xml_find_all(bits, "//mission[@year]")) )
+		xmlXsd <- "nmdbioticv1.4"
+	else if( length(xml_find_all(bits, "//biotic")) )
+                xmlXsd <- "icesBiotic"
+	else if( length(xml_find_all(bits, "//echosounder_dataset")) )
+		xmlXsd <- "nmdechosounderv1"
+	else if( length(xml_find_all(bits, "//acoustic")) )
+		xmlXsd <- "icesAcoustic"
+	else if( length(xml_find_all(bits, "//seddellinje")) )
+		xmlXsd <- "landingerv2"
+	else
+		xmlXsd <- NULL
+
+	return(list(xsd = xmlXsd, encoding = xmlEnc))
+}
